@@ -29,6 +29,7 @@ Connection::Connection(ConnectionType type, QTcpSocket *socket, QObject *parent)
     connectionStream_ = getStream(0);
 
     SettingsFrame settings;
+    settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1;
     connectionStream_->sendFrame(settings);
 }
 
