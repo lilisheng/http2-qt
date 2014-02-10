@@ -12,6 +12,7 @@
 #include "basicframe.h"
 #include "headersframe.h"
 #include "dataframe.h"
+#include "windowupdateframe.h"
 #include <QDebug>
 
 namespace http2 {
@@ -19,7 +20,9 @@ namespace http2 {
 Stream::Stream(Connection *connection, quint32 identifier, ConnectionType type) :
     QObject(connection),
     connection_(connection),
-    context_({identifier, type})
+    context_({identifier, type}),
+    windowSize_(66535),
+    windowConsumed_(0)
 {
 
 }
@@ -45,6 +48,14 @@ void Stream::receiveFrame(const BasicFrame& frame)
         DataFrame* in = new DataFrame(frame, this);
         qDebug() << "<<RECV>>\n" << in->inspect();
         emit dataReceived(context_.identifier, in);
+
+        windowConsumed_ += in->payload().size();
+        if (windowConsumed_ >= windowSize_) {
+            windowConsumed_ = 0;
+            WindowUpdateFrame frame;
+            frame.setWindowSizeIncrement(windowSize_ * 2);
+            sendFrame(frame);
+        }
     }
         break;
     default:
@@ -55,6 +66,16 @@ void Stream::receiveFrame(const BasicFrame& frame)
 void Stream::setHeaderTableSize(int headerTableSize)
 {
     context_.hpack.setHeaderTableSize(headerTableSize);
+}
+
+int Stream::windowSize() const
+{
+    return windowSize_;
+}
+
+void Stream::setWindowSize(int windowSize)
+{
+    windowSize_ = windowSize;
 }
 
 }

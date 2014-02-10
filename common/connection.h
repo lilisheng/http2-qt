@@ -49,6 +49,7 @@ private:
     QMap<quint32, Stream*> streamMap_;
     Stream *connectionStream_;
     int maxIdentifier_;
+    int initialWindowSize_;
 
 };
 

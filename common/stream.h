@@ -25,6 +25,8 @@ class Stream : public QObject
     Q_OBJECT
 public:
     explicit Stream(Connection *connection, quint32 identifier, ConnectionType type);
+    int windowSize() const;
+    void setWindowSize(int windowSize);
 
 signals:
     void headerReceived(quint32 identifier, const HeadersFrame* frame);
@@ -38,6 +40,8 @@ public slots:
 private:
     Connection *connection_;
     StreamContext context_;
+    int windowSize_;
+    int windowConsumed_;
 
 };
 

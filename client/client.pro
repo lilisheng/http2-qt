@@ -26,6 +26,7 @@ SOURCES += main.cpp \
     ../common/dataframe.cpp \
     ../common/goawayframe.cpp \
     ../common/pingframe.cpp \
+    ../common/windowupdateframe.cpp \
     ../common/huffman.cpp \
     ../common/stream.cpp
 
@@ -40,6 +41,7 @@ HEADERS += \
     ../common/dataframe.h \
     ../common/goawayframe.h \
     ../common/pingframe.h \
+    ../common/windowupdateframe.h \
     ../common/huffman.h \
     ../common/huffmantable.h \
     ../common/errorcode.h \

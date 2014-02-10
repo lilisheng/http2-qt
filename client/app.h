@@ -34,7 +34,7 @@ public slots:
             connect(&client_, &http2::Client::responceReceived, this, &App::received);
             connect(&client_, &http2::Client::responceReceived, this, &App::done);
             client_.connectToHost(url_.host(), url_.port(80));
-            client_.get("/");
+            client_.get(url_.path());
         }
         else {
             QTextStream(stdout) << "please specify URL\n";

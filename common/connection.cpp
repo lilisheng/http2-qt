@@ -11,6 +11,7 @@
 #include "settingsframe.h"
 #include "goawayframe.h"
 #include "pingframe.h"
+#include "windowupdateframe.h"
 #include <QTcpSocket>
 #include <QtEndian>
 
@@ -20,7 +21,8 @@ Connection::Connection(ConnectionType type, QTcpSocket *socket, QObject *parent)
     QObject(parent),
     type_(type),
     socket_(socket),
-    maxIdentifier_(0)
+    maxIdentifier_(0),
+    initialWindowSize_(65535)
 {
     if (!socket_) qWarning() << "empty socket";
     connect(socket_, &QTcpSocket::readyRead, this, &Connection::receive);
@@ -56,6 +58,7 @@ Stream* Connection::getStream(int identifier)
             }
         }
         stream = new Stream(this, identifier, type_);
+        stream->setWindowSize(initialWindowSize_);
         streamMap_[identifier] = stream;
         emit streamCreated(stream);
     }
@@ -70,37 +73,46 @@ void Connection::sendRawData(const QByteArray& data)
 
 void Connection::receive()
 {
-    qint64 length = socket_->bytesAvailable();
-    if (currentFrame_) {
-        int payloadLen = currentFrame_->length();
-        if (length >= payloadLen) {
-            currentFrame_->setPayload(socket_->read(payloadLen));
-            receiveFrame(*currentFrame_);
-            currentFrame_.reset();
-        }
-    }
-    else {
-        if (length >= 8) {
-            QByteArray frameHeader = socket_->read(8);
-            const uchar *headerPtr = reinterpret_cast<const uchar*>(frameHeader.data());
+    while (1) {
+        qint64 length = socket_->bytesAvailable();
 
-            currentFrame_.reset(new BasicFrame);
-            currentFrame_->setPayload(QByteArray(qFromBigEndian<qint16>(headerPtr), 0));
-            headerPtr += sizeof(qint16);
-
-            currentFrame_->setType(static_cast<FrameType>(*headerPtr));
-            headerPtr += sizeof(uchar);
-
-            currentFrame_->setFlags(*headerPtr);
-            headerPtr += sizeof(uchar);
-
-            currentFrame_->setIdentifier(qFromBigEndian<qint32>(headerPtr));
-
+        if (currentFrame_) {
             int payloadLen = currentFrame_->length();
-            if (payloadLen <= length) {
+            if (length >= payloadLen) {
                 currentFrame_->setPayload(socket_->read(payloadLen));
                 receiveFrame(*currentFrame_);
                 currentFrame_.reset();
+            }
+            else {
+                break;
+            }
+        }
+        else {
+            if (length >= 8) {
+                QByteArray frameHeader = socket_->read(8);
+                const uchar *headerPtr = reinterpret_cast<const uchar*>(frameHeader.data());
+
+                currentFrame_.reset(new BasicFrame);
+                currentFrame_->setPayload(QByteArray(qFromBigEndian<qint16>(headerPtr), 0));
+                headerPtr += sizeof(qint16);
+
+                currentFrame_->setType(static_cast<FrameType>(*headerPtr));
+                headerPtr += sizeof(uchar);
+
+                currentFrame_->setFlags(*headerPtr);
+                headerPtr += sizeof(uchar);
+
+                currentFrame_->setIdentifier(qFromBigEndian<qint32>(headerPtr));
+
+                int payloadLen = currentFrame_->length();
+                if (payloadLen <= length) {
+                    currentFrame_->setPayload(socket_->read(payloadLen));
+                    receiveFrame(*currentFrame_);
+                    currentFrame_.reset();
+                }
+            }
+            else {
+                break;
             }
         }
     }
@@ -124,6 +136,13 @@ void Connection::receiveFrame(const BasicFrame& frame)
                 stream->setHeaderTableSize(in[SETTINGS_HEADER_TABLE_SIZE]);
             }
         }
+        if (in.contains(SETTINGS_INITIAL_WINDOW_SIZE)) {
+            int size = in[SETTINGS_INITIAL_WINDOW_SIZE];
+            initialWindowSize_ = size;
+            for (Stream *stream : streamMap_) {
+                stream->setWindowSize(size);
+            }
+        }
 
         if (!in.ack()) {
             SettingsFrame out;
@@ -143,6 +162,12 @@ void Connection::receiveFrame(const BasicFrame& frame)
             out.setPayload(in.payload());
             connectionStream_->sendFrame(out);
         }
+    }
+        return;
+    case FRAME_WINDOW_UPDATE:
+    {
+        WindowUpdateFrame in(frame);
+        qDebug() << "<<RECV>>\n" << in.inspect();
     }
         return;
     case FRAME_GOAWAY:
