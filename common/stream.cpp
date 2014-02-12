@@ -53,7 +53,7 @@ void Stream::receiveFrame(const BasicFrame& frame)
         if (windowConsumed_ >= windowSize_) {
             windowConsumed_ = 0;
             WindowUpdateFrame frame;
-            frame.setWindowSizeIncrement(windowSize_ * 2);
+            frame.setWindowSizeIncrement(windowSize_);
             sendFrame(frame);
         }
     }

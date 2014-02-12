@@ -49,6 +49,7 @@ HEADERS += \
     ../common/headertable.h \
     ../common/streamcontext.h \
     ../common/common.h \
+    ../common/consts.h \
     app.h
 
 INCLUDEPATH += ../common

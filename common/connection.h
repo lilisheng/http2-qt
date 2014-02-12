@@ -50,6 +50,7 @@ private:
     Stream *connectionStream_;
     int maxIdentifier_;
     int initialWindowSize_;
+    int windowConsumed_;
 
 };
 
