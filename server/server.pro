@@ -10,14 +10,13 @@
 QT       += core network
 QT       -= gui
 
-TARGET = http2c
+TARGET = http2s
 CONFIG   += console c++11
 CONFIG   -= app_bundle
 
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    client.cpp \
     ../common/basicframe.cpp \
     ../common/hpack.cpp \
     ../common/connection.cpp \
@@ -28,10 +27,10 @@ SOURCES += main.cpp \
     ../common/pingframe.cpp \
     ../common/windowupdateframe.cpp \
     ../common/huffman.cpp \
-    ../common/stream.cpp
+    ../common/stream.cpp \
+    server.cpp
 
 HEADERS += \
-    client.h \
     ../common/basicframe.h \
     ../common/hpack.h \
     ../common/connection.h \
@@ -49,7 +48,7 @@ HEADERS += \
     ../common/headertable.h \
     ../common/streamcontext.h \
     ../common/common.h \
-    ../common/consts.h \
-    app.h
+    app.h \
+    server.h
 
 INCLUDEPATH += ../common

@@ -12,6 +12,7 @@
 #include "goawayframe.h"
 #include "pingframe.h"
 #include "windowupdateframe.h"
+#include "consts.h"
 #include <QTcpSocket>
 #include <QtEndian>
 
@@ -22,14 +23,14 @@ Connection::Connection(ConnectionType type, QTcpSocket *socket, QObject *parent)
     type_(type),
     socket_(socket),
     maxIdentifier_(0),
-    initialWindowSize_(65535)
+    initialWindowSize_(STREAM_INITIAL_WINDOW_SIZE),
+    windowConsumed_(0)
 {
     if (!socket_) qWarning() << "empty socket";
     connect(socket_, &QTcpSocket::readyRead, this, &Connection::receive);
     connectionStream_ = getStream(0);
 
     SettingsFrame settings;
-    settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1;
     connectionStream_->sendFrame(settings);
 }
 
@@ -177,6 +178,17 @@ void Connection::receiveFrame(const BasicFrame& frame)
         qDebug() << "<<RECV>>\n" << in.inspect();
     }
         return;
+    case FRAME_DATA:
+    {
+        windowConsumed_ += frame.payload().size();
+        if (windowConsumed_ >= CONNECTION_WINDOW_SIZE) {
+            windowConsumed_ = 0;
+            WindowUpdateFrame out;
+            out.setWindowSizeIncrement(CONNECTION_WINDOW_SIZE);
+            connectionStream_->sendFrame(out);
+        }
+    }
+        break;
     default:
         ;
     }
