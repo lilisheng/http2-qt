@@ -35,8 +35,7 @@ void Server::newConnection()
 
 void Server::receiveHeader(Stream* stream, const HeadersFrame* frame)
 {
-    QString path = documentDir_.absoluteFilePath((*frame)[":path"].mid(1));
-    qDebug() << path;
+    QString path = QDir(documentDir_.absoluteFilePath((*frame)[":path"].mid(1))).canonicalPath();
 
     HeadersFrame header;
     header.setEndHeaders(true);
@@ -45,7 +44,7 @@ void Server::receiveHeader(Stream* stream, const HeadersFrame* frame)
     DataFrame data;
     data.setEndStream(false);
 
-    if (QFileInfo(path).exists()) {
+    if (path.startsWith(documentDir_.canonicalPath()) && QFileInfo(path).exists()) {
         QFile file(path);
         file.open(QFile::ReadOnly);
         header[":status"] = "200";
