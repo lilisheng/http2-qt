@@ -40,14 +40,14 @@ void Stream::receiveFrame(const BasicFrame& frame)
     {
         HeadersFrame* in = new HeadersFrame(frame, context_, this);
         qDebug() << "<<RECV>>\n" << in->inspect();
-        emit headerReceived(context_.identifier, in);
+        emit headerReceived(this, in);
     }
         break;
     case FRAME_DATA:
     {
         DataFrame* in = new DataFrame(frame, this);
         qDebug() << "<<RECV>>\n" << in->inspect();
-        emit dataReceived(context_.identifier, in);
+        emit dataReceived(this, in);
 
         windowConsumed_ += in->payload().size();
         if (windowConsumed_ >= windowSize_) {
@@ -76,6 +76,11 @@ int Stream::windowSize() const
 void Stream::setWindowSize(int windowSize)
 {
     windowSize_ = windowSize;
+}
+
+quint32 Stream::identifier() const
+{
+    return context_.identifier;
 }
 
 }

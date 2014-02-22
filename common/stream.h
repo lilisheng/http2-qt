@@ -27,10 +27,11 @@ public:
     explicit Stream(Connection *connection, quint32 identifier, ConnectionType type);
     int windowSize() const;
     void setWindowSize(int windowSize);
+    quint32 identifier() const;
 
 signals:
-    void headerReceived(quint32 identifier, const HeadersFrame* frame);
-    void dataReceived(quint32 identifier, const DataFrame* frame);
+    void headerReceived(Stream* stream, const HeadersFrame* frame);
+    void dataReceived(Stream* stream, const DataFrame* frame);
 
 public slots:
     void sendFrame(const IFrame& frame);

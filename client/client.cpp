@@ -59,13 +59,14 @@ void Client::get(const QString& path)
     stream->sendFrame(frame);
 }
 
-void Client::receiveHeader(quint32 identifier, const HeadersFrame* frame)
+void Client::receiveHeader(Stream *stream, const HeadersFrame* frame)
 {
-    responses_[identifier].headers = frame->headers();
+    responses_[stream->identifier()].headers = frame->headers();
 }
 
-void Client::receiveData(quint32 identifier, const DataFrame* frame)
+void Client::receiveData(Stream *stream, const DataFrame* frame)
 {
+    quint32 identifier = stream->identifier();
     if (responses_.contains(identifier)) {
         Response& res = responses_[identifier];
         res.body += frame->payload();

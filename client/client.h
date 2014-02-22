@@ -15,6 +15,7 @@
 namespace http2 {
 
 class Connection;
+class Stream;
 class HeadersFrame;
 class DataFrame;
 
@@ -39,8 +40,8 @@ signals:
 
 private slots:
     void startConnection();
-    void receiveHeader(quint32 identifier, const HeadersFrame* frame);
-    void receiveData(quint32 identifier, const DataFrame* frame);
+    void receiveHeader(Stream *stream, const HeadersFrame* frame);
+    void receiveData(Stream *stream, const DataFrame* frame);
 
 private:
     QString host_;
