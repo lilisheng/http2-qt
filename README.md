@@ -7,7 +7,7 @@ HTTP 2.0 implementation example with Qt
 
 ## Frontend
 * ☑ Client
-* ☐ Server
+* ☑ Server
 
 ## Negotiation
 * ☐ TLS/NPN
